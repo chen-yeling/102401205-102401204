@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园失物招领</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="app">
+
+<!-- ========== 顶部：固定不动 ========== -->
+<header class="top-bar">
+
+  <!-- 红色标题条 -->
+  <div class="title-bar">
+    <h1 class="app-title">FZU失物招领平台</h1>
+  </div>
+
+  <!-- 白色搜索区 -->
+  <div class="search-area">
+    <div class="search-bar">
+      <input id="searchInput" type="text" placeholder="搜索物品名称、地点、描述">
+    </div>
+
+<div class="tab-bar">
+  <button id="tabLost" class="tab-btn active" data-type="lost"><span>寻找物品</span></button>
+  <button id="tabFound" class="tab-btn" data-type="found"><span>寻找失主</span></button>
+</div>
+
+  </div>
+
+</header>
+    <!-- ========== 中间：只有这一块滚动 ========== -->
+    <main id="itemList" class="item-list">
+      <!-- 初始没有任何信息，显示空状态 -->
+      <div class="empty-state" id="emptyState">无相关信息</div>
+    </main>
+
+    <!-- ========== 底部：固定不动 ========== -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" id="navHome">首页</button>
+      <button class="nav-btn nav-plus" id="navAdd">+</button>
+      <button class="nav-btn" id="navMine">我的</button>
+    </nav>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
