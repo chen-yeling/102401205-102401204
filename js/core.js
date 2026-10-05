@@ -5,9 +5,11 @@ function createItem(data) {
     type: data.type,
     title: data.title,
     desc: data.desc,
-    place: data.place,
     date: data.date,
+    place: data.place,
+    image: data.image || "",
     contact: data.contact,
+    remark: data.remark || "",
     status: "active",
     createdAt: Date.now()
   };
