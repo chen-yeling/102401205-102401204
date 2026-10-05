@@ -28,6 +28,7 @@
 <div class="tab-bar">
   <button id="tabLost" class="tab-btn active" data-type="lost"><span>寻找物品</span></button>
   <button id="tabFound" class="tab-btn" data-type="found"><span>寻找失主</span></button>
+  <div class="tab-indicator"></div>
 </div>
 
   </div>
@@ -130,8 +131,58 @@
     </main>
   </section>
 
-</div>
+  <!-- ========== 详情视图 ========== -->
+  <section id="detailView" class="view">
+    <header class="top-bar">
+      <div class="title-bar publish-title-bar">
+        <button id="detailBackBtn" class="back-btn">←</button>
+        <h1 class="app-title">物品详情</h1>
+        <span class="title-placeholder"></span>
+      </div>
+    </header>
 
+    <main class="publish-body">
+
+      <!-- 图片 -->
+      <div id="detailImageWrap" class="detail-image-wrap"></div>
+
+      <!-- 类型 + 状态 -->
+      <div class="detail-meta">
+        <span id="detailTag" class="tag"></span>
+        <span id="detailStatus" class="detail-status"></span>
+      </div>
+
+      <!-- 物品名称 -->
+      <h2 id="detailTitle" class="detail-title"></h2>
+
+      <!-- 信息列表 -->
+      <div class="detail-info-block">
+        <div class="detail-row">
+          <span class="detail-label">描述</span>
+          <span id="detailDesc" class="detail-value"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">时间</span>
+          <span id="detailDate" class="detail-value"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">地点</span>
+          <span id="detailPlace" class="detail-value"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">联系方式</span>
+          <span id="detailContact" class="detail-value"></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">备注</span>
+          <span id="detailRemark" class="detail-value"></span>
+        </div>
+      </div>
+
+    </main>
+  </section>
+
+</div>
 <!-- 发布成功提示 -->
 <div id="toast" class="toast">发布成功！</div>
 
