@@ -2,6 +2,24 @@
 let currentKeyword = "";
 let currentType = "lost";
 
+// 把红线移动到当前激活按钮的文字下方
+function moveIndicator() {
+  const tabBar = document.querySelector(".tab-bar");
+  const indicator = document.querySelector(".tab-indicator");
+  const activeBtn = document.querySelector(".tab-btn.active");
+
+  if (!tabBar || !indicator || !activeBtn) return;
+
+  const span = activeBtn.querySelector("span");
+  if (!span) return;
+
+  const spanRect = span.getBoundingClientRect();
+  const barRect = tabBar.getBoundingClientRect();
+
+  indicator.style.left = (spanRect.left - barRect.left) + "px";
+  indicator.style.width = spanRect.width + "px";
+}
+
 // 切换视图
 function showView(viewId) {
   document.querySelectorAll(".view").forEach(v => {
@@ -13,9 +31,12 @@ function showView(viewId) {
 // 回到首页
 function goHome() {
   showView("homeView");
-  // 视图切换后红线位置要重算
-  moveIndicator();
   render();
+
+  // 等浏览器完成布局后，再算红线位置
+  requestAnimationFrame(() => {
+    moveIndicator();
+  });
 }
 
 // 清空表单的所有错误提示
@@ -197,7 +218,39 @@ function switchTab(type) {
     btn.classList.toggle("active", btn.dataset.type === type);
   });
 
+  moveIndicator();   // ← 加上这行
   render();
+}
+
+let currentDetailId = null;
+
+function showDetail(id) {
+  const items = loadItems();
+  const item = items.find(it => it.id === id);
+  if (!item) return;
+
+  currentDetailId = id;
+
+  const imageWrap = document.getElementById("detailImageWrap");
+  imageWrap.innerHTML = item.image ? `<img src="${item.image}" alt="">` : "";
+
+  const tag = document.getElementById("detailTag");
+  tag.textContent = item.type === "lost" ? "寻物" : "招领";
+  tag.className = "tag " + (item.type === "lost" ? "tag-lost" : "tag-found");
+
+  const statusEl = document.getElementById("detailStatus");
+  statusEl.textContent = getStatusText(item);
+  statusEl.className = "detail-status" + (item.status !== "active" ? " done" : "");
+
+  document.getElementById("detailTitle").textContent = item.title || "未填写";
+  document.getElementById("detailDesc").textContent = item.desc || "无";
+  document.getElementById("detailDate").textContent = item.date || "未填写";
+  document.getElementById("detailPlace").textContent = item.place || "未填写";
+  document.getElementById("detailContact").textContent = item.contact || "未填写";
+  document.getElementById("detailRemark").textContent = item.remark || "无";
+
+
+  showView("detailView");
 }
 
 // 绑定所有事件
@@ -258,4 +311,18 @@ function bindEvents() {
 
   // 9. 窗口大小变化时红线重算
   window.addEventListener("resize", moveIndicator);
+
+  // 10. 点击卡片打开详情
+  document.getElementById("itemList").addEventListener("click", (e) => {
+    const card = e.target.closest(".item-card");
+    if (!card) return;
+    const id = card.dataset.id;
+    if (id) showDetail(id);
+  });
+
+  // 11. 详情页返回
+  document.getElementById("detailBackBtn").addEventListener("click", () => {
+    goHome();
+  });
+
 }
