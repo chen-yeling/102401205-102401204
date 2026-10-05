@@ -178,6 +178,14 @@ body {
   cursor: pointer;
 }
 
+.item-thumb {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
 .item-title {
   font-size: 16px;
   margin: 6px 0 8px;
@@ -282,4 +290,196 @@ body {
 
 .nav-plus:focus {
   outline: none;
+}
+
+/* ========== 6. 视图切换 ========== */
+.view {
+  display: none;          /* 默认隐藏 */
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;          /* 防止 flex 子元素撑破容器 */
+}
+
+.view.active {
+  display: flex;          /* 只有 active 的视图显示 */
+}
+
+/* ========== 7. 发布页 ========== */
+.publish-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn:focus {
+  outline: none;
+}
+
+.publish-title-bar .app-title {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.title-placeholder {
+  width: 40px;            /* 和返回按钮等宽，让标题真正居中 */
+}
+
+/* 发布页主体：可滚动 */
+.publish-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: #f5f6f8;
+}
+
+/* 表单项 */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.required {
+  color: #c62828;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: #c62828;
+}
+
+.form-textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.form-file {
+  width: 100%;
+  font-size: 13px;
+  color: #555;
+}
+
+/* 类型二选一 */
+.type-options {
+  display: flex;
+  gap: 12px;
+}
+
+.type-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.type-option input {
+  display: none;          /* 隐藏原生小圆点 */
+}
+
+.type-option:has(input:checked) {
+  border-color: #c62828;
+  color: #c62828;
+  font-weight: bold;
+  background: #fff5f5;
+}
+
+/* 图片预览 */
+.image-preview {
+  margin-top: 8px;
+}
+
+.image-preview img {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+/* 错误提示 */
+.error-msg {
+  font-size: 12px;
+  color: #c62828;
+  margin-top: 4px;
+  min-height: 16px;       /* 占位，避免布局跳动 */
+}
+
+/* 提交按钮 */
+.submit-btn {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 23px;
+  background: #c62828;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.submit-btn:disabled {
+  background: #e0a5a5;
+  cursor: not-allowed;
+}
+
+/* 发布成功提示 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 80px;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 999;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
