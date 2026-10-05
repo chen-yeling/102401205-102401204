@@ -79,73 +79,40 @@ body {
 /* 两个切换按钮：各占半屏，文字各自居中 */
 .tab-bar {
   display: flex;
-  /* 去掉 gap 和 justify-content，按钮自己会平分 */
+  position: relative;       /* 关键：红线以它为定位参照 */
+  width: 100%;              /* 关键：撑满整行 */
 }
 
 .tab-btn {
-  flex: 1;                /* 每个按钮占一半宽度 */
+  flex: 1;                  /* 每个按钮占一半宽度 */
   border: none;
   background: #fff;
   color: #c62828;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  padding: 12px 0;        /* 上下留白，左右不需要 */
-  display: flex;          /* 让内部文字居中 */
+  padding: 12px 0;
+  display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* 文字本身作为定位参照 */
-.tab-btn span {
-  position: relative;
-  display: inline-block;
-  padding-bottom: 3px;
+.tab-btn:focus {
+  outline: none;
 }
 
-/* 选中时，红线贴着文字 */
-.tab-btn.active span::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
+/* 红线：由 JS 控制位置和宽度，平移动画 */
+.tab-indicator {
+  position: absolute;       /* 关键：脱离 flex 布局，不再挤占按钮空间 */
   bottom: 0;
+  left: 0;
+  width: 0;
   height: 2px;
   background: #c62828;
   border-radius: 1px;
+  transition: left 0.3s ease, width 0.3s ease;
 }
 
-.tab-btn:focus {
-  outline: none;
-}
-
-/* 选中时，在文字下方画一条和文字等宽的红线 */
-.tab-btn.active span::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;                  /* 左右贴住文字，自动等宽 */
-  bottom: 0;
-  height: 2px;               /* 红线变细 */
-  background: #c62828;
-  border-radius: 1px;
-}
-
-.tab-btn:focus {
-  outline: none;
-}
-/* 选中状态：文字下方一条红色横线 */
-.tab-btn.active::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: 36px;           /* 红线长度，可调 */
-  height: 3px;
-  background: #c62828;
-  border-radius: 2px;
-}
 
 /* 去掉按钮默认的点击高亮（移动端会有一块灰色） */
 .tab-btn:focus {
@@ -298,6 +265,7 @@ body {
   flex: 1;
   flex-direction: column;
   min-height: 0;          /* 防止 flex 子元素撑破容器 */
+  width: 100%;
 }
 
 .view.active {
@@ -482,4 +450,64 @@ body {
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ========== 8. 详情页 ========== */
+.detail-image-wrap img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.detail-status {
+  font-size: 13px;
+  color: #888;
+}
+
+.detail-status.done {
+  color: #1a7f37;
+  font-weight: bold;
+}
+
+.detail-title {
+  font-size: 22px;
+  color: #222;
+  margin-bottom: 16px;
+}
+
+.detail-info-block {
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 16px;
+  margin-bottom: 20px;
+}
+
+.detail-row {
+  display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  width: 70px;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  flex: 1;
+  color: #333;
+  word-break: break-all;
 }
