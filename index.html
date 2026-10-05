@@ -11,6 +11,7 @@
   <div class="app">
 
 <!-- ========== 顶部：固定不动 ========== -->
+<section id="homeView" class="view active">
 <header class="top-bar">
 
   <!-- 红色标题条 -->
@@ -44,8 +45,96 @@
       <button class="nav-btn nav-plus" id="navAdd">+</button>
       <button class="nav-btn" id="navMine">我的</button>
     </nav>
+</section>
 
+<!-- ========== 发布视图 ========== -->
+  <section id="publishView" class="view">
+    <header class="top-bar">
+      <div class="title-bar publish-title-bar">
+        <button id="backBtn" class="back-btn">←</button>
+        <h1 class="app-title">发布消息</h1>
+        <span class="title-placeholder"></span>
+      </div>
+    </header>
+
+    <main class="publish-body">
+      <form id="publishForm" novalidate>
+
+ <!-- 类型 -->
+<div class="form-group">
+  <label class="form-label">类型 <span class="required">*</span></label>
+  <div class="type-options">
+    <label class="type-option">
+      <input type="radio" name="type" value="lost">
+      <span>寻找物品</span>
+    </label>
+    <label class="type-option">
+      <input type="radio" name="type" value="found">
+      <span>寻找失主</span>
+    </label>
   </div>
+  <p class="error-msg" id="err-type"></p>
+</div>
+
+        <!-- 物品名称 -->
+        <div class="form-group">
+          <label class="form-label" for="p-title">物品名称 <span class="required">*</span></label>
+          <input id="p-title" name="title" type="text" class="form-input" placeholder="例如：校园卡、蓝牙耳机">
+          <p class="error-msg" id="err-title"></p>
+        </div>
+
+        <!-- 物品描述 -->
+        <div class="form-group">
+          <label class="form-label" for="p-desc">物品描述</label>
+          <textarea id="p-desc" name="desc" class="form-textarea" placeholder="颜色、品牌、特征等（选填）"></textarea>
+        </div>
+
+        <!-- 时间 -->
+        <div class="form-group">
+          <label class="form-label" for="p-date">失物 / 拾物时间 <span class="required">*</span></label>
+          <input id="p-date" name="date" type="date" class="form-input">
+          <p class="error-msg" id="err-date"></p>
+        </div>
+
+        <!-- 地点 -->
+        <div class="form-group">
+          <label class="form-label" for="p-place">失物 / 拾物地点 <span class="required">*</span></label>
+          <input id="p-place" name="place" type="text" class="form-input" placeholder="例如：图书馆三楼">
+          <p class="error-msg" id="err-place"></p>
+        </div>
+
+        <!-- 图片 -->
+        <div class="form-group">
+          <label class="form-label" for="p-image">上传图片</label>
+          <input id="p-image" name="image" type="file" accept="image/*" class="form-file">
+          <div id="imagePreview" class="image-preview"></div>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="form-group">
+          <label class="form-label" for="p-contact">联系方式 <span class="required">*</span></label>
+          <input id="p-contact" name="contact" type="text" class="form-input" placeholder="QQ / 微信 / 手机号">
+          <p class="error-msg" id="err-contact"></p>
+        </div>
+
+        <!-- 备注 -->
+        <div class="form-group">
+          <label class="form-label" for="p-remark">备注</label>
+          <textarea id="p-remark" name="remark" class="form-textarea" placeholder="其他想说明的信息（选填）"></textarea>
+        </div>
+
+        <!-- 提交 -->
+        <button type="submit" id="submitBtn" class="submit-btn">确认发布</button>
+
+      </form>
+    </main>
+  </section>
+
+</div>
+
+<!-- 发布成功提示 -->
+<div id="toast" class="toast">发布成功！</div>
+
 
   <script src="js/storage.js"></script>
   <script src="js/core.js"></script>
