@@ -34,6 +34,11 @@ function goHome() {
   showView("homeView");
   moveIndicator();
   render();
+
+  // 等浏览器完成布局后，再算红线位置
+  requestAnimationFrame(() => {
+    moveIndicator();
+  });
 }
 
 // 清空表单错误
@@ -192,6 +197,37 @@ function switchTab(type) {
   render();
 }
 
+let currentDetailId = null;
+
+function showDetail(id) {
+  const items = loadItems();
+  const item = items.find(it => it.id === id);
+  if (!item) return;
+
+  currentDetailId = id;
+
+  const imageWrap = document.getElementById("detailImageWrap");
+  imageWrap.innerHTML = item.image ? `<img src="${item.image}" alt="">` : "";
+
+  const tag = document.getElementById("detailTag");
+  tag.textContent = item.type === "lost" ? "寻物" : "招领";
+  tag.className = "tag " + (item.type === "lost" ? "tag-lost" : "tag-found");
+
+  const statusEl = document.getElementById("detailStatus");
+  statusEl.textContent = getStatusText(item);
+  statusEl.className = "detail-status" + (item.status !== "active" ? " done" : "");
+
+  document.getElementById("detailTitle").textContent = item.title || "未填写";
+  document.getElementById("detailDesc").textContent = item.desc || "无";
+  document.getElementById("detailDate").textContent = item.date || "未填写";
+  document.getElementById("detailPlace").textContent = item.place || "未填写";
+  document.getElementById("detailContact").textContent = item.contact || "未填写";
+  document.getElementById("detailRemark").textContent = item.remark || "无";
+
+
+  showView("detailView");
+}
+
 // 绑定所有事件
 function bindEvents() {
   // 1. 顶部切换
@@ -279,4 +315,30 @@ function bindEvents() {
   
   // 10. 窗口变化
   window.addEventListener("resize", moveIndicator);
+  
+    // 11. 点击卡片打开详情
+  const itemList = document.getElementById("itemList");
+  if (itemList) {
+    itemList.addEventListener("click", (e) => {
+      const card = e.target.closest(".item-card");
+      if (!card) return;
+      const id = card.dataset.id;
+      if (id) showDetail(id);
+    });
+  }
+
+  // 12. 详情页返回
+  const detailBackBtn = document.getElementById("detailBackBtn");
+  if (detailBackBtn) {
+    detailBackBtn.addEventListener("click", () => goHome());
+  }
+
+  // 13. 我的页面底部“我的”按钮
+  const navMineMine = document.getElementById("navMineMine");
+  if (navMineMine) {
+    navMineMine.addEventListener("click", () => {
+      showView("mineView");
+      renderMine();
+    });
+  }
 }
