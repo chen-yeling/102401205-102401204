@@ -150,17 +150,33 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 1500);
 }
 
-// 渲染首页列表
+// 渲染首页列表（带无结果提示）
 function render() {
-  let items = loadItems();
-  items = searchItems(items, currentKeyword);
-  items = filterItems(items, currentType);
+  const allItems = loadItems();                        // 全部数据
+  let items = searchItems(allItems, currentKeyword);   // 先搜索
+  items = filterItems(items, currentType);             // 再按类型筛选
+
   const list = document.getElementById("itemList");
   if (!list) return;
-  if (items.length === 0) {
-    list.innerHTML = '<div class="empty-state">无相关信息</div>';
+
+  // 情况 1：本地一条数据都没有
+  if (allItems.length === 0) {
+    list.innerHTML = '<div class="empty-state">暂无信息，点击 + 发布第一条吧</div>';
     return;
   }
+
+  // 情况 2：有数据，但搜索/筛选后没有结果
+  if (items.length === 0) {
+    const kw = currentKeyword.trim();
+    if (kw) {
+      list.innerHTML = `<div class="empty-state">没有找到与“${escapeHtml(kw)}”相关的物品<br>换个关键词试试吧</div>`;
+    } else {
+      list.innerHTML = `<div class="empty-state">当前分类下暂无信息</div>`;
+    }
+    return;
+  }
+
+  // 有结果，正常渲染卡片
   list.innerHTML = items.map(item => `
     <div class="item-card" data-id="${item.id}">
       <span class="tag ${item.type === "lost" ? "tag-lost" : "tag-found"}">${item.type === "lost" ? "寻物" : "招领"}</span>
