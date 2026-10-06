@@ -128,6 +128,14 @@
           <h1 class="app-title">我的发布</h1>
           <span class="title-placeholder"></span>
         </div>
+        <!-- 新增：切换栏（与首页一致） -->
+        <div class="search-area">
+          <div class="tab-bar mine-tab-bar">
+            <button id="mineTabLost" class="tab-btn active" data-type="lost"><span>寻找物品</span></button>
+            <button id="mineTabFound" class="tab-btn" data-type="found"><span>寻找失主</span></button>
+            <div class="tab-indicator mine-tab-indicator"></div>
+          </div>
+        </div>
       </header>
       <main id="mineList" class="item-list"></main>
       <nav class="bottom-nav">
