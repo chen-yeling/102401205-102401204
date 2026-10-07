@@ -2,7 +2,10 @@
 let currentKeyword = "";
 let currentType = "lost";
 
-// 切换视图（加了防御，找不到不会白屏崩溃）
+// 新增：我的页面的当前类型
+let mineCurrentType = "lost";
+
+// 切换视图
 function showView(viewId) {
   const target = document.getElementById(viewId);
   if (!target) {
@@ -15,12 +18,27 @@ function showView(viewId) {
   target.classList.add("active");
 }
 
-// 把红线移动到当前激活按钮的文字下方
+// 首页红线移动
 function moveIndicator() {
-  const tabBar = document.querySelector(".tab-bar");
-  const indicator = document.querySelector(".tab-indicator");
-  const activeBtn = document.querySelector(".tab-btn.active");
+  const tabBar = document.querySelector("#homeView .tab-bar");
+  const indicator = document.querySelector("#homeView .tab-indicator");
+  const activeBtn = document.querySelector("#homeView .tab-btn.active");
   if (!tabBar || !indicator || !activeBtn) return;
+  const span = activeBtn.querySelector("span");
+  if (!span) return;
+  const spanRect = span.getBoundingClientRect();
+  const barRect = tabBar.getBoundingClientRect();
+  indicator.style.left = (spanRect.left - barRect.left) + "px";
+  indicator.style.width = spanRect.width + "px";
+}
+
+// 我的页面红线移动
+function moveMineIndicator() {
+  const tabBar = document.querySelector(".mine-tab-bar");
+  const indicator = document.querySelector(".mine-tab-indicator");
+  if (!tabBar || !indicator) return;
+  const activeBtn = tabBar.querySelector(".tab-btn.active");
+  if (!activeBtn) return;
   const span = activeBtn.querySelector("span");
   if (!span) return;
   const spanRect = span.getBoundingClientRect();
@@ -34,8 +52,6 @@ function goHome() {
   showView("homeView");
   moveIndicator();
   render();
-
-  // 等浏览器完成布局后，再算红线位置
   requestAnimationFrame(() => {
     moveIndicator();
   });
@@ -75,12 +91,12 @@ function compressImage(file, callback) {
 // 重置表单
 function resetPublishForm() {
   const form = document.getElementById("publishForm");
-  if(form) form.reset();
+  if (form) form.reset();
   const preview = document.getElementById("imagePreview");
-  if(preview) preview.innerHTML = "";
+  if (preview) preview.innerHTML = "";
   clearErrors();
   const btn = document.getElementById("submitBtn");
-  if(btn) btn.disabled = false;
+  if (btn) btn.disabled = false;
 }
 
 // 发布提交逻辑
@@ -128,23 +144,39 @@ function handlePublish(e) {
 // 提示框
 function showToast(message) {
   const toast = document.getElementById("toast");
-  if(!toast) return;
+  if (!toast) return;
   toast.textContent = message;
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 1500);
 }
 
-// 渲染首页列表
+// 渲染首页列表（带无结果提示）
 function render() {
-  let items = loadItems();
-  items = searchItems(items, currentKeyword);
-  items = filterItems(items, currentType);
+  const allItems = loadItems();                        // 全部数据
+  let items = searchItems(allItems, currentKeyword);   // 先搜索
+  items = filterItems(items, currentType);             // 再按类型筛选
+
   const list = document.getElementById("itemList");
   if (!list) return;
-  if (items.length === 0) {
-    list.innerHTML = '<div class="empty-state">无相关信息</div>';
+
+  // 情况 1：本地一条数据都没有
+  if (allItems.length === 0) {
+    list.innerHTML = '<div class="empty-state">暂无信息，点击 + 发布第一条吧</div>';
     return;
   }
+
+  // 情况 2：有数据，但搜索/筛选后没有结果
+  if (items.length === 0) {
+    const kw = currentKeyword.trim();
+    if (kw) {
+      list.innerHTML = `<div class="empty-state">没有找到与“${escapeHtml(kw)}”相关的物品<br>换个关键词试试吧</div>`;
+    } else {
+      list.innerHTML = `<div class="empty-state">当前分类下暂无信息</div>`;
+    }
+    return;
+  }
+
+  // 有结果，正常渲染卡片
   list.innerHTML = items.map(item => `
     <div class="item-card" data-id="${item.id}">
       <span class="tag ${item.type === "lost" ? "tag-lost" : "tag-found"}">${item.type === "lost" ? "寻物" : "招领"}</span>
@@ -156,9 +188,10 @@ function render() {
   `).join("");
 }
 
-// 渲染“我的发布”列表
+// 渲染“我的发布”列表（按 mineCurrentType 筛选，卡片可点击）
 function renderMine() {
-  const items = loadItems();
+  let items = loadItems();
+  items = filterItems(items, mineCurrentType);
   const list = document.getElementById("mineList");
   if (!list) return;
   if (items.length === 0) {
@@ -166,7 +199,7 @@ function renderMine() {
     return;
   }
   list.innerHTML = items.map(item => `
-    <div class="item-card">
+    <div class="item-card" data-id="${item.id}">
       <span class="tag ${item.type === "lost" ? "tag-lost" : "tag-found"}">${item.type === "lost" ? "寻物" : "招领"}</span>
       <h3 class="item-title">${escapeHtml(item.title)}</h3>
       <p class="item-info">地点：${escapeHtml(item.place || "未填写")}</p>
@@ -187,14 +220,24 @@ function escapeHtml(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// 切换标签
+// 切换首页标签
 function switchTab(type) {
   currentType = type;
-  document.querySelectorAll(".tab-btn").forEach(btn => {
+  document.querySelectorAll("#homeView .tab-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.type === type);
   });
   moveIndicator();
   render();
+}
+
+// 切换“我的”标签
+function switchMineTab(type) {
+  mineCurrentType = type;
+  document.querySelectorAll(".mine-tab-bar .tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.type === type);
+  });
+  moveMineIndicator();
+  renderMine();
 }
 
 let currentDetailId = null;
@@ -224,81 +267,113 @@ function showDetail(id) {
   document.getElementById("detailContact").textContent = item.contact || "未填写";
   document.getElementById("detailRemark").textContent = item.remark || "无";
 
-
   showView("detailView");
 }
 
 // 绑定所有事件
 function bindEvents() {
-  // 1. 顶部切换
-  document.querySelectorAll(".tab-btn").forEach(btn => {
+  // 1. 首页顶部切换
+  document.querySelectorAll("#homeView .tab-btn").forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.type));
   });
-  
+
+  // 我的页面切换
+  const mineTabLost = document.getElementById("mineTabLost");
+  const mineTabFound = document.getElementById("mineTabFound");
+  if (mineTabLost) mineTabLost.addEventListener("click", () => switchMineTab("lost"));
+  if (mineTabFound) mineTabFound.addEventListener("click", () => switchMineTab("found"));
+
   // 2. 搜索框
   const searchInput = document.getElementById("searchInput");
-  if(searchInput) searchInput.addEventListener("input", (e) => { currentKeyword = e.target.value; render(); });
-  
+  if (searchInput) searchInput.addEventListener("input", (e) => { currentKeyword = e.target.value; render(); });
+
   // 3. 首页底部导航
   const navHome = document.getElementById("navHome");
-  if(navHome) navHome.addEventListener("click", () => { currentKeyword = ""; if(searchInput) searchInput.value = ""; switchTab("lost"); goHome(); });
-  
-  const navAdd = document.getElementById("navAdd");
-  if(navAdd) navAdd.addEventListener("click", () => { resetPublishForm(); showView("publishView"); });
-  
-  const navMine = document.getElementById("navMine");
-  if(navMine) navMine.addEventListener("click", () => { showView("mineView"); renderMine(); });
+  if (navHome) navHome.addEventListener("click", () => {
+    currentKeyword = "";
+    if (searchInput) searchInput.value = "";
+    switchTab("lost");
+    goHome();
+  });
 
-  // 4. 我的页面-返回按钮
+  const navAdd = document.getElementById("navAdd");
+  if (navAdd) navAdd.addEventListener("click", () => { resetPublishForm(); showView("publishView"); });
+
+  const navMine = document.getElementById("navMine");
+  if (navMine) navMine.addEventListener("click", () => {
+    showView("mineView");
+    renderMine();
+    moveMineIndicator();
+  });
+
+  // 4. 我的页面返回按钮
   const mineBackBtn = document.getElementById("mineBackBtn");
-  if(mineBackBtn) mineBackBtn.addEventListener("click", () => goHome());
-  
-  // 5. 我的页面-标记按钮（事件委托）
+  if (mineBackBtn) mineBackBtn.addEventListener("click", () => goHome());
+
+  // 5. 我的页面列表点击（标记 + 卡片跳转详情）
   const mineList = document.getElementById("mineList");
-  if(mineList) {
+  if (mineList) {
     mineList.addEventListener("click", (e) => {
-      const btn = e.target.closest(".mark-btn");
-      if (!btn) return;
-      const id = btn.dataset.id, type = btn.dataset.type;
-      const newStatus = type === "lost" ? "found" : "returned";
-      const items = loadItems();
-      const updated = updateItemStatus(items, id, newStatus);
-      saveItems(updated);
-      showToast(newStatus === "found" ? "已标记为已找到" : "已标记为已归还");
-      renderMine(); render();
+      // 先判断是否点击了“标记”按钮
+      const markBtn = e.target.closest(".mark-btn");
+      if (markBtn) {
+        const id = markBtn.dataset.id, type = markBtn.dataset.type;
+        const newStatus = type === "lost" ? "found" : "returned";
+        const items = loadItems();
+        const updated = updateItemStatus(items, id, newStatus);
+        saveItems(updated);
+        showToast(newStatus === "found" ? "已标记为已找到" : "已标记为已归还");
+        renderMine(); render();
+        return;
+      }
+      // 再判断是否点击了卡片
+      const card = e.target.closest(".item-card");
+      if (card) {
+        const id = card.dataset.id;
+        if (id) showDetail(id);
+      }
     });
   }
 
-  // 6. 我的页面底部导航专属绑定
+  // 6. 我的页面底部导航
   const navHomeMine = document.getElementById("navHomeMine");
-  if(navHomeMine) {
+  if (navHomeMine) {
     navHomeMine.addEventListener("click", () => {
       currentKeyword = "";
-      if(searchInput) searchInput.value = "";
+      if (searchInput) searchInput.value = "";
       switchTab("lost");
       goHome();
     });
   }
 
   const navAddMine = document.getElementById("navAddMine");
-  if(navAddMine) {
+  if (navAddMine) {
     navAddMine.addEventListener("click", () => {
       resetPublishForm();
       showView("publishView");
     });
   }
 
-  // 7. 发布页-返回按钮
+  const navMineMine = document.getElementById("navMineMine");
+  if (navMineMine) {
+    navMineMine.addEventListener("click", () => {
+      showView("mineView");
+      renderMine();
+      moveMineIndicator();
+    });
+  }
+
+  // 7. 发布页返回按钮
   const backBtn = document.getElementById("backBtn");
-  if(backBtn) backBtn.addEventListener("click", () => goHome());
-  
-  // 8. 发布页-图片预览
+  if (backBtn) backBtn.addEventListener("click", () => goHome());
+
+  // 8. 发布页图片预览
   const imageInput = document.getElementById("p-image");
-  if(imageInput) {
+  if (imageInput) {
     imageInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       const preview = document.getElementById("imagePreview");
-      if(!preview) return;
+      if (!preview) return;
       preview.innerHTML = "";
       if (!file) return;
       compressImage(file, (dataUrl) => {
@@ -308,15 +383,12 @@ function bindEvents() {
       });
     });
   }
-  
-  // 9. 发布页-提交
+
+  // 9. 发布页提交
   const publishForm = document.getElementById("publishForm");
-  if(publishForm) publishForm.addEventListener("submit", handlePublish);
-  
-  // 10. 窗口变化
-  window.addEventListener("resize", moveIndicator);
-  
-    // 11. 点击卡片打开详情
+  if (publishForm) publishForm.addEventListener("submit", handlePublish);
+
+  // 10. 首页卡片点击详情
   const itemList = document.getElementById("itemList");
   if (itemList) {
     itemList.addEventListener("click", (e) => {
@@ -327,18 +399,15 @@ function bindEvents() {
     });
   }
 
-  // 12. 详情页返回
+  // 11. 详情页返回
   const detailBackBtn = document.getElementById("detailBackBtn");
   if (detailBackBtn) {
     detailBackBtn.addEventListener("click", () => goHome());
   }
 
-  // 13. 我的页面底部“我的”按钮
-  const navMineMine = document.getElementById("navMineMine");
-  if (navMineMine) {
-    navMineMine.addEventListener("click", () => {
-      showView("mineView");
-      renderMine();
-    });
-  }
+  // 12. 窗口变化时移动红线
+  window.addEventListener("resize", () => {
+    moveIndicator();
+    moveMineIndicator();
+  });
 }
