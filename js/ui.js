@@ -1,8 +1,9 @@
-// 当前的状态：关键词、类型
+// 当前的状态：关键词、类型、类别
 let currentKeyword = "";
 let currentType = "lost";
+let currentCategory = "all";
 
-// 新增：我的页面的当前类型
+// 我的页面的当前类型
 let mineCurrentType = "lost";
 
 // 切换视图
@@ -97,6 +98,12 @@ function resetPublishForm() {
   clearErrors();
   const btn = document.getElementById("submitBtn");
   if (btn) btn.disabled = false;
+  // 自动填入今天日期
+  const dateInput = document.getElementById("p-date");
+  if (dateInput) {
+    const today = new Date().toISOString().slice(0, 10);
+    dateInput.value = today;
+  }
 }
 
 // 发布提交逻辑
@@ -107,6 +114,7 @@ function handlePublish(e) {
   const submitBtn = document.getElementById("submitBtn");
   const typeEl = form.querySelector('input[name="type"]:checked');
   const title = form.title.value.trim();
+  const category = form.category.value;
   const desc = form.desc.value.trim();
   const date = form.date.value;
   const place = form.place.value.trim();
@@ -127,7 +135,7 @@ function handlePublish(e) {
 
   const finish = (imageData) => {
     const item = createItem({
-      type: typeEl.value, title, desc, date, place,
+      type: typeEl.value, title, category, desc, date, place,
       image: imageData, contact, remark
     });
     const items = loadItems();
@@ -150,11 +158,29 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 1500);
 }
 
-// 渲染首页列表（带无结果提示）
+// 兼容旧浏览器的复制方法
+function fallbackCopy(text) {
+  const input = document.createElement("textarea");
+  input.value = text;
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.appendChild(input);
+  input.select();
+  try {
+    const ok = document.execCommand("copy");
+    showToast(ok ? "已复制联系方式：" + text : "复制失败，请手动复制");
+  } catch (e) {
+    showToast("复制失败，请手动复制");
+  }
+  document.body.removeChild(input);
+}
+
+// 渲染首页列表
 function render() {
-  const allItems = loadItems();                        // 全部数据
-  let items = searchItems(allItems, currentKeyword);   // 先搜索
-  items = filterItems(items, currentType);             // 再按类型筛选
+  const allItems = loadItems();
+  let items = searchItems(allItems, currentKeyword);
+  items = filterItems(items, currentType);
+  items = filterByCategory(items, currentCategory);
 
   const list = document.getElementById("itemList");
   if (!list) return;
@@ -170,6 +196,8 @@ function render() {
     const kw = currentKeyword.trim();
     if (kw) {
       list.innerHTML = `<div class="empty-state">没有找到与“${escapeHtml(kw)}”相关的物品<br>换个关键词试试吧</div>`;
+    } else if (currentCategory !== "all") {
+      list.innerHTML = `<div class="empty-state">当前类别下暂无信息</div>`;
     } else {
       list.innerHTML = `<div class="empty-state">当前分类下暂无信息</div>`;
     }
@@ -181,6 +209,7 @@ function render() {
     <div class="item-card" data-id="${item.id}">
       <span class="tag ${item.type === "lost" ? "tag-lost" : "tag-found"}">${item.type === "lost" ? "寻物" : "招领"}</span>
       <h3 class="item-title">${escapeHtml(item.title)}</h3>
+      ${item.category ? `<p class="item-info">类别：${escapeHtml(item.category)}</p>` : ""}
       <p class="item-info">地点：${escapeHtml(item.place || "未填写")}</p>
       <p class="item-info">时间：${escapeHtml(item.date || "未填写")}</p>
       <p class="item-status">${getStatusText(item)}</p>
@@ -188,7 +217,7 @@ function render() {
   `).join("");
 }
 
-// 渲染“我的发布”列表（按 mineCurrentType 筛选，卡片可点击）
+// 渲染“我的发布”列表
 function renderMine() {
   let items = loadItems();
   items = filterItems(items, mineCurrentType);
@@ -202,6 +231,7 @@ function renderMine() {
     <div class="item-card" data-id="${item.id}">
       <span class="tag ${item.type === "lost" ? "tag-lost" : "tag-found"}">${item.type === "lost" ? "寻物" : "招领"}</span>
       <h3 class="item-title">${escapeHtml(item.title)}</h3>
+      ${item.category ? `<p class="item-info">类别：${escapeHtml(item.category)}</p>` : ""}
       <p class="item-info">地点：${escapeHtml(item.place || "未填写")}</p>
       <p class="item-info">时间：${escapeHtml(item.date || "未填写")}</p>
       <p class="item-status">${getStatusText(item)}</p>
@@ -220,7 +250,7 @@ function escapeHtml(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// 切换首页标签
+// 切换首页类型标签
 function switchTab(type) {
   currentType = type;
   document.querySelectorAll("#homeView .tab-btn").forEach(btn => {
@@ -238,6 +268,15 @@ function switchMineTab(type) {
   });
   moveMineIndicator();
   renderMine();
+}
+
+// 切换类别
+function switchCategory(category) {
+  currentCategory = category;
+  document.querySelectorAll("#categoryBar .cat-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.category === category);
+  });
+  render();
 }
 
 let currentDetailId = null;
@@ -261,23 +300,39 @@ function showDetail(id) {
   statusEl.className = "detail-status" + (item.status !== "active" ? " done" : "");
 
   document.getElementById("detailTitle").textContent = item.title || "未填写";
+  document.getElementById("detailCategory").textContent = item.category || "未填写";
   document.getElementById("detailDesc").textContent = item.desc || "无";
   document.getElementById("detailDate").textContent = item.date || "未填写";
   document.getElementById("detailPlace").textContent = item.place || "未填写";
   document.getElementById("detailContact").textContent = item.contact || "未填写";
   document.getElementById("detailRemark").textContent = item.remark || "无";
 
+  // 联系方式为空时隐藏复制按钮
+  const copyBtn = document.getElementById("copyContactBtn");
+  if (copyBtn) {
+    if (!item.contact || item.contact === "未填写") {
+      copyBtn.style.display = "none";
+    } else {
+      copyBtn.style.display = "inline-block";
+    }
+  }
+
   showView("detailView");
 }
 
 // 绑定所有事件
 function bindEvents() {
-  // 1. 首页顶部切换
+  // 1. 首页顶部类型切换
   document.querySelectorAll("#homeView .tab-btn").forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.type));
   });
 
-  // 我的页面切换
+  // 首页类别切换
+  document.querySelectorAll("#categoryBar .cat-btn").forEach(btn => {
+    btn.addEventListener("click", () => switchCategory(btn.dataset.category));
+  });
+
+  // 我的页面类型切换
   const mineTabLost = document.getElementById("mineTabLost");
   const mineTabFound = document.getElementById("mineTabFound");
   if (mineTabLost) mineTabLost.addEventListener("click", () => switchMineTab("lost"));
@@ -293,6 +348,7 @@ function bindEvents() {
     currentKeyword = "";
     if (searchInput) searchInput.value = "";
     switchTab("lost");
+    switchCategory("all");
     goHome();
   });
 
@@ -310,11 +366,10 @@ function bindEvents() {
   const mineBackBtn = document.getElementById("mineBackBtn");
   if (mineBackBtn) mineBackBtn.addEventListener("click", () => goHome());
 
-  // 5. 我的页面列表点击（标记 + 卡片跳转详情）
+  // 5. 我的页面列表点击
   const mineList = document.getElementById("mineList");
   if (mineList) {
     mineList.addEventListener("click", (e) => {
-      // 先判断是否点击了“标记”按钮
       const markBtn = e.target.closest(".mark-btn");
       if (markBtn) {
         const id = markBtn.dataset.id, type = markBtn.dataset.type;
@@ -326,7 +381,6 @@ function bindEvents() {
         renderMine(); render();
         return;
       }
-      // 再判断是否点击了卡片
       const card = e.target.closest(".item-card");
       if (card) {
         const id = card.dataset.id;
@@ -342,6 +396,7 @@ function bindEvents() {
       currentKeyword = "";
       if (searchInput) searchInput.value = "";
       switchTab("lost");
+      switchCategory("all");
       goHome();
     });
   }
@@ -405,7 +460,26 @@ function bindEvents() {
     detailBackBtn.addEventListener("click", () => goHome());
   }
 
-  // 12. 窗口变化时移动红线
+  // 12. 详情页一键复制联系方式
+  const copyContactBtn = document.getElementById("copyContactBtn");
+  if (copyContactBtn) {
+    copyContactBtn.addEventListener("click", () => {
+      const contact = document.getElementById("detailContact").textContent.trim();
+      if (!contact || contact === "未填写") {
+        showToast("暂无可复制的联系方式");
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(contact)
+          .then(() => showToast("已复制联系方式：" + contact))
+          .catch(() => fallbackCopy(contact));
+      } else {
+        fallbackCopy(contact);
+      }
+    });
+  }
+
+  // 13. 窗口变化时移动红线
   window.addEventListener("resize", () => {
     moveIndicator();
     moveMineIndicator();
