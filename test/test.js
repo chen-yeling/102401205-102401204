@@ -18,6 +18,7 @@ const mockData = [
     id: "1",
     type: "lost",
     title: "校园卡",
+    category: "证件卡类",
     desc: "在图书馆丢失，姓名张三",
     place: "图书馆三楼",
     date: "2026-10-01",
@@ -28,6 +29,7 @@ const mockData = [
     id: "2",
     type: "found",
     title: "一串钥匙",
+    category: "钥匙",
     desc: "在食堂捡到，有挂件",
     place: "第二食堂",
     date: "2026-10-02",
@@ -40,6 +42,7 @@ const mockData = [
 const newItem = createItem({
   type: "lost",
   title: "蓝牙耳机",
+  category: "电子产品",
   desc: "白色，带充电仓",
   place: "操场",
   date: "2026-10-03",
@@ -50,9 +53,19 @@ const newItem = createItem({
 
 assert(newItem.title === "蓝牙耳机", "createItem：标题正确");
 assert(newItem.type === "lost", "createItem：类型正确");
+assert(newItem.category === "电子产品", "createItem：类别字段正确");
 assert(newItem.status === "active", "createItem：默认状态为 active");
 assert(newItem.image === "", "createItem：图片默认为空字符串");
 assert(typeof newItem.id === "string", "createItem：自动生成字符串 id");
+
+const itemWithoutCategory = createItem({
+  type: "found",
+  title: "雨伞",
+  place: "食堂",
+  date: "2026-10-04",
+  contact: "123"
+});
+assert(itemWithoutCategory.category === "", "createItem：不传类别时默认为空字符串");
 
 // ================== 2. 测试 searchItems ==================
 assert(searchItems(mockData, "校园卡").length === 1, "searchItems：按名称搜索命中");
@@ -76,6 +89,14 @@ assert(updatedItems[1].status === "active", "updateItemStatus：其他数据不�
 assert(getStatusText({ status: "active" }) === "进行中", "getStatusText：active → 进行中");
 assert(getStatusText({ status: "found" }) === "已找到", "getStatusText：found → 已找到");
 assert(getStatusText({ status: "returned" }) === "已归还", "getStatusText：returned → 已归还");
+
+// ================== 6. 测试 filterByCategory（新增） ==================
+assert(filterByCategory(mockData, "all").length === 2, "filterByCategory：all 返回全部");
+assert(filterByCategory(mockData, "证件卡类").length === 1, "filterByCategory：筛选证件卡类");
+assert(filterByCategory(mockData, "证件卡类")[0].id === "1", "filterByCategory：返回正确的 id");
+assert(filterByCategory(mockData, "钥匙").length === 1, "filterByCategory：筛选钥匙");
+assert(filterByCategory(mockData, "电子产品").length === 0, "filterByCategory：无匹配返回空数组");
+assert(filterByCategory(mockData, "").length === 2, "filterByCategory：空字符串返回全部");
 
 // ================== 输出结果 ==================
 const resultDiv = document.getElementById("result");

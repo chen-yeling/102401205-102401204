@@ -4,6 +4,7 @@ function createItem(data) {
     id: Date.now().toString(),
     type: data.type,
     title: data.title,
+    category: data.category || "",
     desc: data.desc,
     date: data.date,
     place: data.place,
@@ -31,6 +32,12 @@ function searchItems(items, keyword) {
 function filterItems(items, type) {
   if (type === "all") return items;
   return items.filter(item => item.type === type);
+}
+
+// 按类别筛选：all / 具体类别名
+function filterByCategory(items, category) {
+  if (!category || category === "all") return items;
+  return items.filter(item => item.category === category);
 }
 
 // 更新某条信息的状态
