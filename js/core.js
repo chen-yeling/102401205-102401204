@@ -50,6 +50,11 @@ function updateItemStatus(items, id, status) {
   });
 }
 
+// 删除某条信息
+function deleteItem(items, id) {
+  return items.filter(item => item.id !== id);
+}
+
 // 状态代码转中文
 function getStatusText(item) {
   if (item.status === "found") return "已找到";
