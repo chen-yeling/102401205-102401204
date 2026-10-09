@@ -25,7 +25,7 @@
             <button id="tabFound" class="tab-btn" data-type="found"><span>寻找失主</span></button>
             <div class="tab-indicator"></div>
           </div>
-          <!-- 类别筛选栏 -->
+          <!-- 类别筛选栏（滚动条） -->
           <div class="category-bar" id="categoryBar">
             <button class="cat-btn active" data-category="all">全部</button>
             <button class="cat-btn" data-category="证件卡类">证件卡类</button>
@@ -72,9 +72,9 @@
             <p class="error-msg" id="err-title"></p>
           </div>
           <div class="form-group">
-            <label class="form-label" for="p-category">物品类别</label>
+            <label class="form-label" for="p-category">物品类别 <span class="required">*</span></label>
             <select id="p-category" name="category" class="form-input">
-              <option value="">请选择（选填）</option>
+              <option value="">请选择</option>
               <option value="证件卡类">证件卡类</option>
               <option value="电子产品">电子产品</option>
               <option value="书籍资料">书籍资料</option>
@@ -82,6 +82,7 @@
               <option value="钥匙">钥匙</option>
               <option value="其他">其他</option>
             </select>
+            <p class="error-msg" id="err-category"></p>
           </div>
           <div class="form-group">
             <label class="form-label" for="p-desc">物品描述</label>
