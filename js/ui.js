@@ -6,7 +6,7 @@ let currentCategory = "all";
 // 我的页面的当前类型
 let mineCurrentType = "lost";
 
-// 切换视图
+// ========== 视图切换 ==========
 function showView(viewId) {
   const target = document.getElementById(viewId);
   if (!target) {
@@ -19,7 +19,7 @@ function showView(viewId) {
   target.classList.add("active");
 }
 
-// 首页红线移动
+// ========== 红线移动 ==========
 function moveIndicator() {
   const tabBar = document.querySelector("#homeView .tab-bar");
   const indicator = document.querySelector("#homeView .tab-indicator");
@@ -33,7 +33,6 @@ function moveIndicator() {
   indicator.style.width = spanRect.width + "px";
 }
 
-// 我的页面红线移动
 function moveMineIndicator() {
   const tabBar = document.querySelector(".mine-tab-bar");
   const indicator = document.querySelector(".mine-tab-indicator");
@@ -48,28 +47,26 @@ function moveMineIndicator() {
   indicator.style.width = spanRect.width + "px";
 }
 
-// 回到首页
+// ========== 回到首页 ==========
 function goHome() {
   showView("homeView");
-  moveIndicator();
   render();
   requestAnimationFrame(() => {
     moveIndicator();
   });
 }
 
-// 清空表单错误
+// ========== 表单错误 ==========
 function clearErrors() {
   document.querySelectorAll(".error-msg").forEach(el => el.textContent = "");
 }
 
-// 显示字段错误
 function showError(fieldId, message) {
   const el = document.getElementById("err-" + fieldId);
   if (el) el.textContent = message;
 }
 
-// 图片压缩
+// ========== 图片压缩 ==========
 function compressImage(file, callback) {
   const reader = new FileReader();
   reader.onload = function (e) {
@@ -79,7 +76,8 @@ function compressImage(file, callback) {
       let w = img.width, h = img.height;
       const maxW = 600;
       if (w > maxW) { h = h * maxW / w; w = maxW; }
-      canvas.width = w; canvas.height = h;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, w, h);
       callback(canvas.toDataURL("image/jpeg", 0.7));
@@ -89,7 +87,7 @@ function compressImage(file, callback) {
   reader.readAsDataURL(file);
 }
 
-// 重置表单
+// ========== 重置发布表单 ==========
 function resetPublishForm() {
   const form = document.getElementById("publishForm");
   if (form) form.reset();
@@ -98,7 +96,6 @@ function resetPublishForm() {
   clearErrors();
   const btn = document.getElementById("submitBtn");
   if (btn) btn.disabled = false;
-  // 自动填入今天日期
   const dateInput = document.getElementById("p-date");
   if (dateInput) {
     const today = new Date().toISOString().slice(0, 10);
@@ -106,7 +103,7 @@ function resetPublishForm() {
   }
 }
 
-// 发布提交逻辑
+// ========== 发布提交 ==========
 function handlePublish(e) {
   e.preventDefault();
   clearErrors();
@@ -150,7 +147,7 @@ function handlePublish(e) {
   else finish("");
 }
 
-// 提示框
+// ========== 提示框 ==========
 function showToast(message) {
   const toast = document.getElementById("toast");
   if (!toast) return;
@@ -159,7 +156,7 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove("show"), 1500);
 }
 
-// 兼容旧浏览器的复制方法
+// ========== 复制兼容 ==========
 function fallbackCopy(text) {
   const input = document.createElement("textarea");
   input.value = text;
@@ -176,9 +173,13 @@ function fallbackCopy(text) {
   document.body.removeChild(input);
 }
 
-// 渲染首页列表
+// ========== 渲染首页列表 ==========
 function render() {
   const allItems = loadItems();
+
+  // 按创建时间倒序：最新的在最上面
+  allItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
   let items = searchItems(allItems, currentKeyword);
   items = filterItems(items, currentType);
   items = filterByCategory(items, currentCategory);
@@ -218,16 +219,23 @@ function render() {
   `).join("");
 }
 
-// 渲染“我的发布”列表
+// ========== 渲染“我的发布”列表 ==========
 function renderMine() {
   let items = loadItems();
+
+  // 按创建时间倒序：最新的在最上面
+  items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
   items = filterItems(items, mineCurrentType);
+
   const list = document.getElementById("mineList");
   if (!list) return;
+
   if (items.length === 0) {
     list.innerHTML = '<div class="empty-state">你还没有发布过信息</div>';
     return;
   }
+
   list.innerHTML = items.map(item => `
     <div class="item-card" data-id="${item.id}">
       <span class="tag ${item.type === "lost" ? "tag-lost" : "tag-found"}">${item.type === "lost" ? "寻物" : "招领"}</span>
@@ -236,7 +244,7 @@ function renderMine() {
       <p class="item-info">地点：${escapeHtml(item.place || "未填写")}</p>
       <p class="item-info">时间：${escapeHtml(item.date || "未填写")}</p>
       <p class="item-status">${getStatusText(item)}</p>
-            <div class="mine-actions">
+      <div class="mine-actions">
         ${item.status === "active" ? `
           <button class="mark-btn" data-id="${item.id}" data-type="${item.type}">
             ${item.type === "lost" ? "标记为已找到" : "标记为已归还"}
@@ -244,16 +252,22 @@ function renderMine() {
         ` : `<span class="done-label">已完成</span>`}
         <button class="delete-btn" data-id="${item.id}">删除</button>
       </div>
+    </div>
   `).join("");
 }
 
-// 防注入
+// ========== 防注入 ==========
 function escapeHtml(str) {
   if (!str) return "";
-  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-// 切换首页类型标签
+// ========== 切换首页标签 ==========
 function switchTab(type) {
   currentType = type;
   document.querySelectorAll("#homeView .tab-btn").forEach(btn => {
@@ -263,7 +277,7 @@ function switchTab(type) {
   render();
 }
 
-// 切换“我的”标签
+// ========== 切换“我的”标签 ==========
 function switchMineTab(type) {
   mineCurrentType = type;
   document.querySelectorAll(".mine-tab-bar .tab-btn").forEach(btn => {
@@ -273,7 +287,7 @@ function switchMineTab(type) {
   renderMine();
 }
 
-// 切换类别
+// ========== 切换类别 ==========
 function switchCategory(category) {
   currentCategory = category;
   document.querySelectorAll("#categoryBar .cat-btn").forEach(btn => {
@@ -282,6 +296,7 @@ function switchCategory(category) {
   render();
 }
 
+// ========== 详情页 ==========
 let currentDetailId = null;
 
 function showDetail(id) {
@@ -310,7 +325,6 @@ function showDetail(id) {
   document.getElementById("detailContact").textContent = item.contact || "未填写";
   document.getElementById("detailRemark").textContent = item.remark || "无";
 
-  // 联系方式为空时隐藏复制按钮
   const copyBtn = document.getElementById("copyContactBtn");
   if (copyBtn) {
     if (!item.contact || item.contact === "未填写") {
@@ -323,7 +337,7 @@ function showDetail(id) {
   showView("detailView");
 }
 
-// 绑定所有事件
+// ========== 绑定所有事件 ==========
 function bindEvents() {
   // 1. 首页顶部类型切换
   document.querySelectorAll("#homeView .tab-btn").forEach(btn => {
@@ -343,80 +357,95 @@ function bindEvents() {
 
   // 2. 搜索框
   const searchInput = document.getElementById("searchInput");
-  if (searchInput) searchInput.addEventListener("input", (e) => { currentKeyword = e.target.value; render(); });
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      currentKeyword = e.target.value;
+      render();
+    });
+  }
 
   // 3. 首页底部导航
   const navHome = document.getElementById("navHome");
-  if (navHome) navHome.addEventListener("click", () => {
-    currentKeyword = "";
-    if (searchInput) searchInput.value = "";
-    switchTab("lost");
-    switchCategory("all");
-    goHome();
-  });
+  if (navHome) {
+    navHome.addEventListener("click", () => {
+      currentKeyword = "";
+      if (searchInput) searchInput.value = "";
+      switchTab("lost");
+      switchCategory("all");
+      goHome();
+    });
+  }
 
   const navAdd = document.getElementById("navAdd");
-  if (navAdd) navAdd.addEventListener("click", () => { resetPublishForm(); showView("publishView"); });
+  if (navAdd) {
+    navAdd.addEventListener("click", () => {
+      resetPublishForm();
+      showView("publishView");
+    });
+  }
 
   const navMine = document.getElementById("navMine");
-  if (navMine) navMine.addEventListener("click", () => {
-    showView("mineView");
-    renderMine();
-    moveMineIndicator();
-  });
+  if (navMine) {
+    navMine.addEventListener("click", () => {
+      showView("mineView");
+      renderMine();
+      moveMineIndicator();
+    });
+  }
 
   // 4. 我的页面返回按钮
   const mineBackBtn = document.getElementById("mineBackBtn");
   if (mineBackBtn) mineBackBtn.addEventListener("click", () => goHome());
 
-  // 5. 我的页面列表点击
+  // 5. 我的页面列表点击（删除 / 标记 / 查看详情）
   const mineList = document.getElementById("mineList");
-if (mineList) {
-  mineList.addEventListener("click", (e) => {
-    // 优先处理“删除”按钮
-    const deleteBtn = e.target.closest(".delete-btn");
-    if (deleteBtn) {
-      e.stopPropagation();
-      const id = deleteBtn.dataset.id;
-      if (!id) return;
+  if (mineList) {
+    mineList.addEventListener("click", (e) => {
+      // 优先处理“删除”
+      const deleteBtn = e.target.closest(".delete-btn");
+      if (deleteBtn) {
+        e.stopPropagation();
+        const id = deleteBtn.dataset.id;
+        if (!id) return;
 
-      // 先找到这条信息的名称，方便弹窗提示
-      const items = loadItems();
-      const target = items.find(it => it.id === id);
-      const name = target ? target.title : "这条信息";
+        const items = loadItems();
+        const target = items.find(it => it.id === id);
+        const name = target ? target.title : "这条信息";
 
-      if (!confirm(`确定删除「${name}」吗？删除后无法恢复。`)) return;
+        if (!confirm(`确定删除「${name}」吗？删除后无法恢复。`)) return;
 
-      const updated = deleteItem(items, id);
-      saveItems(updated);
-      showToast("已删除");
-      renderMine();
-      render();
-      return;
-    }
+        const updated = deleteItem(items, id);
+        saveItems(updated);
+        showToast("已删除");
+        renderMine();
+        render();
+        return;
+      }
 
-    // 处理“标记”按钮
-    const markBtn = e.target.closest(".mark-btn");
-    if (markBtn) {
-      e.stopPropagation();
-      const id = markBtn.dataset.id, type = markBtn.dataset.type;
-      const newStatus = type === "lost" ? "found" : "returned";
-      const items = loadItems();
-      const updated = updateItemStatus(items, id, newStatus);
-      saveItems(updated);
-      showToast(newStatus === "found" ? "已标记为已找到" : "已标记为已归还");
-      renderMine(); render();
-      return;
-    }
+      // 处理“标记”
+      const markBtn = e.target.closest(".mark-btn");
+      if (markBtn) {
+        e.stopPropagation();
+        const id = markBtn.dataset.id;
+        const type = markBtn.dataset.type;
+        const newStatus = type === "lost" ? "found" : "returned";
+        const items = loadItems();
+        const updated = updateItemStatus(items, id, newStatus);
+        saveItems(updated);
+        showToast(newStatus === "found" ? "已标记为已找到" : "已标记为已归还");
+        renderMine();
+        render();
+        return;
+      }
 
-    // 点击卡片打开详情
-    const card = e.target.closest(".item-card");
-    if (card) {
-      const id = card.dataset.id;
-      if (id) showDetail(id);
-    }
-  });
-}
+      // 点击卡片查看详情
+      const card = e.target.closest(".item-card");
+      if (card) {
+        const id = card.dataset.id;
+        if (id) showDetail(id);
+      }
+    });
+  }
 
   // 6. 我的页面底部导航
   const navHomeMine = document.getElementById("navHomeMine");
@@ -485,9 +514,7 @@ if (mineList) {
 
   // 11. 详情页返回
   const detailBackBtn = document.getElementById("detailBackBtn");
-  if (detailBackBtn) {
-    detailBackBtn.addEventListener("click", () => goHome());
-  }
+  if (detailBackBtn) detailBackBtn.addEventListener("click", () => goHome());
 
   // 12. 详情页一键复制联系方式
   const copyContactBtn = document.getElementById("copyContactBtn");
