@@ -124,6 +124,7 @@ function handlePublish(e) {
   let hasError = false;
   if (!typeEl) { showError("type", "请选择类型"); hasError = true; }
   if (!title) { showError("title", "请填写物品名称"); hasError = true; }
+  if (!category) { showError("category", "请选择物品类别"); hasError = true; }
   if (!date) { showError("date", "请选择失物/拾物时间"); hasError = true; }
   if (!place) { showError("place", "请填写失物/拾物地点"); hasError = true; }
   if (!contact) { showError("contact", "请填写联系方式"); hasError = true; }
