@@ -236,12 +236,14 @@ function renderMine() {
       <p class="item-info">地点：${escapeHtml(item.place || "未填写")}</p>
       <p class="item-info">时间：${escapeHtml(item.date || "未填写")}</p>
       <p class="item-status">${getStatusText(item)}</p>
-      ${item.status === "active" ? `
-        <button class="mark-btn" data-id="${item.id}" data-type="${item.type}" style="margin-top:10px; padding:6px 12px; background:#c62828; color:#fff; border:none; border-radius:4px; cursor:pointer;">
-          ${item.type === "lost" ? "标记为已找到" : "标记为已归还"}
-        </button>
-      ` : `<p style="color:#1a7f37; font-weight:bold; margin-top:10px;">已完成</p>`}
-    </div>
+            <div class="mine-actions">
+        ${item.status === "active" ? `
+          <button class="mark-btn" data-id="${item.id}" data-type="${item.type}">
+            ${item.type === "lost" ? "标记为已找到" : "标记为已归还"}
+          </button>
+        ` : `<span class="done-label">已完成</span>`}
+        <button class="delete-btn" data-id="${item.id}">删除</button>
+      </div>
   `).join("");
 }
 
@@ -369,26 +371,52 @@ function bindEvents() {
 
   // 5. 我的页面列表点击
   const mineList = document.getElementById("mineList");
-  if (mineList) {
-    mineList.addEventListener("click", (e) => {
-      const markBtn = e.target.closest(".mark-btn");
-      if (markBtn) {
-        const id = markBtn.dataset.id, type = markBtn.dataset.type;
-        const newStatus = type === "lost" ? "found" : "returned";
-        const items = loadItems();
-        const updated = updateItemStatus(items, id, newStatus);
-        saveItems(updated);
-        showToast(newStatus === "found" ? "已标记为已找到" : "已标记为已归还");
-        renderMine(); render();
-        return;
-      }
-      const card = e.target.closest(".item-card");
-      if (card) {
-        const id = card.dataset.id;
-        if (id) showDetail(id);
-      }
-    });
-  }
+if (mineList) {
+  mineList.addEventListener("click", (e) => {
+    // 优先处理“删除”按钮
+    const deleteBtn = e.target.closest(".delete-btn");
+    if (deleteBtn) {
+      e.stopPropagation();
+      const id = deleteBtn.dataset.id;
+      if (!id) return;
+
+      // 先找到这条信息的名称，方便弹窗提示
+      const items = loadItems();
+      const target = items.find(it => it.id === id);
+      const name = target ? target.title : "这条信息";
+
+      if (!confirm(`确定删除「${name}」吗？删除后无法恢复。`)) return;
+
+      const updated = deleteItem(items, id);
+      saveItems(updated);
+      showToast("已删除");
+      renderMine();
+      render();
+      return;
+    }
+
+    // 处理“标记”按钮
+    const markBtn = e.target.closest(".mark-btn");
+    if (markBtn) {
+      e.stopPropagation();
+      const id = markBtn.dataset.id, type = markBtn.dataset.type;
+      const newStatus = type === "lost" ? "found" : "returned";
+      const items = loadItems();
+      const updated = updateItemStatus(items, id, newStatus);
+      saveItems(updated);
+      showToast(newStatus === "found" ? "已标记为已找到" : "已标记为已归还");
+      renderMine(); render();
+      return;
+    }
+
+    // 点击卡片打开详情
+    const card = e.target.closest(".item-card");
+    if (card) {
+      const id = card.dataset.id;
+      if (id) showDetail(id);
+    }
+  });
+}
 
   // 6. 我的页面底部导航
   const navHomeMine = document.getElementById("navHomeMine");
